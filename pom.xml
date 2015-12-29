@@ -1,0 +1,52 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.usc.cs.autoext</groupId>
+    <artifactId>autoextractor</artifactId>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>auto-extractor</name>
+    <url>http://cs.usc.edu</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <source.version>1.8</source.version>
+        <target.version>1.8</target.version>
+        <args4j.version>2.32</args4j.version>
+        <nekohtml.version>1.9.22</nekohtml.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.sourceforge.nekohtml</groupId>
+            <artifactId>nekohtml</artifactId>
+            <version>${nekohtml.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>args4j</groupId>
+            <artifactId>args4j</artifactId>
+            <version>${args4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <version>3.3</version>
+                <configuration>
+                    <source>${source.version}</source>
+                    <target>${target.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
