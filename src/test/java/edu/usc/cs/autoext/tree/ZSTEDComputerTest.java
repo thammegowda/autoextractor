@@ -27,7 +27,7 @@ public class ZSTEDComputerTest {
 
         //dissimilar
         distance = ZSTEDComputer.computeDistance(new File(file1), new File(file3));
-        System.out.println(distance);
+        assertEquals(9.0, distance, 0.00);
 
     }
 }
