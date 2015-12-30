@@ -10,7 +10,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -36,7 +35,7 @@ public class ZSTEDComputer implements EditDistanceComputer<Node> {
         @Option(name = "-in1")
         private File html1;
 
-        @Option(name = "-in1")
+        @Option(name = "-in2")
         private File html2;
 
     }
@@ -49,7 +48,8 @@ public class ZSTEDComputer implements EditDistanceComputer<Node> {
      * @throws IOException when an error occurs
      * @throws SAXException when parser fails
      */
-    public static double computeDistance(File file1, File file2) throws IOException, SAXException {
+    public static double computeDistance(File file1, File file2)
+            throws IOException, SAXException {
         DOMParser domParser = new DOMParser();
         domParser.parse(new InputSource(new FileReader(file1)));
         Document doc1 = domParser.getDocument();
