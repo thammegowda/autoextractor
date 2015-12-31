@@ -1,28 +1,37 @@
 package edu.usc.cs.autoext.tree;
 
 /**
- * Created by tg on 12/30/15.
+ * Defines contract for Edit cost used by edit cost computer
+ * @see DefaultEditCost
  */
 public interface EditCost {
+
+    /**
+     * Cost for insertion operation
+     * @param node node to be inserted
+     * @return the cost of insertion
+     */
     double getInsertCost(TreeNode node);
+
+    /**
+     * cost for remove operation
+     * @param node node to be removed
+     * @return cost for removal
+     */
     double getRemoveCost(TreeNode node);
+
+    /**
+     * Cost for replacement
+     * @param node1 node to be removed
+     * @param node2 node to be inserted
+     * @return cost for the replacement
+     */
     double getReplaceCost(TreeNode node1, TreeNode node2);
+
+    /**
+     * Cost for no edit operation
+     * @return cost for no operation
+     */
     double getNoEditCost();
 
-    default double getCost(TreeNode node1, TreeNode node2) {
-
-        if (node1 == null && node2 != null) {
-            // insert node2
-            return getInsertCost(node2);
-        } else if (node1 != null && node2 == null) {
-            //delete node1
-            return getRemoveCost(node1);
-        } else if ((node1 == null && node2 == null)
-                || (node1.getNodeName().equals(node2.getNodeName()))){
-            //no edit
-            return getNoEditCost();
-        } else {
-            return getReplaceCost(node1, node2);
-        }
-    }
 }
