@@ -96,20 +96,25 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
         ZSTEDComputer edComputer = new ZSTEDComputer();
         int n = docs.size();
         double similarityMatrix[][] = new double[n][n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                similarityMatrix[i][j] = edComputer.computeDistance(docs.get(i), docs.get(j));
-            }
-        }
-
         System.out.println("#Index\tFile Path");
         for (int i = 0; i < htmlPaths.size(); i++) {
             System.out.println(i + "\t" + htmlPaths.get(i));
         }
-        System.out.println("\n#Similarity Matrix");
+        System.out.println("\n#Distance Matrix");
+        boolean symmetricMesure = true;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                System.out.printf("%f\t", similarityMatrix[i][j]);
+                if (i == j){
+                    //diagonal, same file
+                    similarityMatrix[i][j] = 0.0;
+                } else if (symmetricMesure&& i > j) {
+                    // lowe diagonal, it is a symmetry
+                    similarityMatrix[i][j] = similarityMatrix[j][i];
+                } else {
+                    // upper diagonal or unsymmetrical, compute it
+                    similarityMatrix[i][j] = edComputer.computeDistance(docs.get(i), docs.get(j));
+                }
+                System.out.printf("%5.2f\t", similarityMatrix[i][j]);
             }
             System.out.println();
         }
