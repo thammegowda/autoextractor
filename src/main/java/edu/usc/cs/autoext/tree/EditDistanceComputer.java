@@ -14,4 +14,12 @@ public interface EditDistanceComputer<T> {
      * @return the edit distance measure
      */
     double computeDistance(T object1, T object2);
+
+
+    /**
+     * Gets cost metric used for computing the edit distance
+     * @return edit cost metric
+     */
+    EditCost<T> getCostMetric();
+
 }

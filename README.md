@@ -24,3 +24,7 @@ $ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.c
 * [Chris Mattmann, USC & NASA JPL]()
 
 
+# References :
++ K. Zhang and D. Shasha. 1989. "Simple fast algorithms for the editing distance between trees and related problems". SIAM J. Comput. 18, 6 (December 1989), 1245-1262. 
++ Jarvis, R.A.; Patrick, Edward A., "Clustering Using a Similarity Measure Based on Shared Near Neighbors," in Computers, IEEE Transactions on , vol.C-22, no.11, pp.1025-1034, Nov. 1973
+

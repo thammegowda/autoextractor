@@ -22,7 +22,9 @@ public class TreeNode {
     protected TreeNode parent;
     protected List<TreeNode> children;
     protected TreeNode leftMostDescendant;
+
     protected int index;
+    protected int size;
 
     private TreeNode(String nodeName ) {
         this.nodeName = nodeName;
@@ -52,7 +54,10 @@ public class TreeNode {
         }
         this.leftMostDescendant = findLeftMostDescendant();
         this.nodeName = innerNode.getNodeName();
-        this.postOrderIndex(new AtomicInteger(0));
+        if (parent == null) {
+            //index only for the root node!
+            this.postOrderIndex(new AtomicInteger(0));
+        }
     }
 
     public String getNodeName() {
@@ -123,7 +128,7 @@ public class TreeNode {
     }
 
     private void prettyPrint(String prefix, boolean isTail) {
-        String name = String.format("[%d] %s desc:[%s]", index,
+        String name = String.format("[%d:%d] %s desc:[%s]", index, size,
                 innerNode.getNodeName(), leftMostDescendant.index);
         System.out.println(prefix + (isTail ? "└── " : "├── ") + name);
         if (hasChildNodes()) {
@@ -162,6 +167,7 @@ public class TreeNode {
      * @param startIndex the starting index
      */
     public void postOrderIndex(AtomicInteger startIndex){
+        int offset = startIndex.get();
         if (hasChildNodes()) {
             for (TreeNode child : children) {
                 child.postOrderIndex(startIndex);
@@ -169,6 +175,7 @@ public class TreeNode {
             }
         }
         this.index = startIndex.get();
+        this.size = this.index - offset + 1;
     }
 
     @Override
@@ -205,6 +212,13 @@ public class TreeNode {
         return keyRoots;
     }
 
+    /**
+     * Get number of nodes (this node + all nodes under this node)
+     * @return number of nodes in the tree
+     */
+    public int getSize() {
+        return size;
+    }
 
     public static TreeNode createDummyNode(String name){
         return new TreeNode(name);

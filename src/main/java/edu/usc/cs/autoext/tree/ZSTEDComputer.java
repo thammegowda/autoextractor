@@ -5,7 +5,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -21,9 +20,15 @@ import java.util.List;
  * Computes edit distance between two nodes in DOM tree.
  * @author Thamme Gowda
  *
- * NOTE: it is work in progress, there are few todo's and fixme's in the code
+ * <br/>
+ * <h1>References :</h1>
+ * <pre>
+ *     K. Zhang and D. Shasha. 1989. Simple fast algorithms for the editing distance between trees and related problems. SIAM J. Comput. 18, 6 (December 1989), 1245-1262.
+ * </pre>
  */
 public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
+
+    private EditCost<TreeNode> costMetric = new DefaultEditCost();
 
     /**
      * CLI argument specification
@@ -41,7 +46,12 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
 
     @Override
     public double computeDistance(TreeNode tree1, TreeNode tree2) {
-        return new ZSTEDistance(tree1, tree2).compute();
+        return new ZSTEDistance(tree1, tree2, costMetric).compute();
+    }
+
+    @Override
+    public EditCost<TreeNode> getCostMetric() {
+        return costMetric;
     }
 
     /**
@@ -94,26 +104,39 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
         }
 
         ZSTEDComputer edComputer = new ZSTEDComputer();
+        SimilarityComputer simComputer = new SimilarityComputer(edComputer);
         int n = docs.size();
+        double distanceMatrix[][] = new double[n][n];
         double similarityMatrix[][] = new double[n][n];
         System.out.println("#Index\tFile Path");
         for (int i = 0; i < htmlPaths.size(); i++) {
             System.out.println(i + "\t" + htmlPaths.get(i));
         }
         System.out.println("\n#Distance Matrix");
-        boolean symmetricMesure = true;
+        boolean symmetricMeasure = edComputer.getCostMetric().isSymmetric();
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (i == j){
                     //diagonal, same file
-                    similarityMatrix[i][j] = 0.0;
-                } else if (symmetricMesure&& i > j) {
+                    distanceMatrix[i][j] = 0.0;
+                } else if (symmetricMeasure && i > j) {
                     // lowe diagonal, it is a symmetry
-                    similarityMatrix[i][j] = similarityMatrix[j][i];
+                    distanceMatrix[i][j] = distanceMatrix[j][i];
                 } else {
                     // upper diagonal or unsymmetrical, compute it
-                    similarityMatrix[i][j] = edComputer.computeDistance(docs.get(i), docs.get(j));
+                    distanceMatrix[i][j] = edComputer.computeDistance(docs.get(i), docs.get(j));
                 }
+                System.out.printf("%5.2f\t", distanceMatrix[i][j]);
+                similarityMatrix[i][j] = simComputer.computeSimilarity(distanceMatrix[i][j],
+                        docs.get(i).getSize(), docs.get(j).getSize());
+            }
+            System.out.println();
+        }
+
+        System.out.println("\n#Similarity Matrix");
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
                 System.out.printf("%5.2f\t", similarityMatrix[i][j]);
             }
             System.out.println();

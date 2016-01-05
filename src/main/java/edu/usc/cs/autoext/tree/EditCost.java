@@ -4,21 +4,21 @@ package edu.usc.cs.autoext.tree;
  * Defines contract for Edit cost used by edit cost computer
  * @see DefaultEditCost
  */
-public interface EditCost {
+public interface EditCost<T> {
 
     /**
      * Cost for insertion operation
      * @param node node to be inserted
      * @return the cost of insertion
      */
-    double getInsertCost(TreeNode node);
+    double getInsertCost(T node);
 
     /**
      * cost for remove operation
      * @param node node to be removed
      * @return cost for removal
      */
-    double getRemoveCost(TreeNode node);
+    double getRemoveCost(T node);
 
     /**
      * Cost for replacement
@@ -26,7 +26,7 @@ public interface EditCost {
      * @param node2 node to be inserted
      * @return cost for the replacement
      */
-    double getReplaceCost(TreeNode node1, TreeNode node2);
+    double getReplaceCost(T node1, T node2);
 
     /**
      * Cost for no edit operation
@@ -34,4 +34,17 @@ public interface EditCost {
      */
     double getNoEditCost();
 
+
+    /**
+     * Maximum cost for any single edit operation.
+     * @return maximum bound on unit edit cost
+     */
+    double getMaxUnitCost();
+
+
+    /**
+     * true if the edit costs are symmetry. Symmetrc
+     * @return true or false based on the symmetric nature
+     */
+    boolean isSymmetric();
 }
