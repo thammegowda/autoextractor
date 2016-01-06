@@ -1,5 +1,7 @@
 package edu.usc.cs.autoext.tree;
 
+import edu.usc.cs.autoext.utils.Checks;
+
 import java.util.List;
 
 /**
@@ -8,11 +10,9 @@ import java.util.List;
 public class SimilarityComputer {
 
     private EditDistanceComputer<TreeNode> distanceComputer;
-    private double maxUnitCost;
 
     public SimilarityComputer(EditDistanceComputer<TreeNode> distanceComputer) {
         this.distanceComputer = distanceComputer;
-        this.maxUnitCost = distanceComputer.getCostMetric().getMaxUnitCost();
     }
 
     /**
@@ -51,6 +51,26 @@ public class SimilarityComputer {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 matrix[i][j] = computeSimilarity(trees.get(i), trees.get(j));
+            }
+        }
+        return matrix;
+    }
+
+    /**
+     * Computes similarity matrix
+     * @param treeSizes the number/size of elements in each tree
+     * @param distanceMatrix the distance matrix
+     * @return similarity matrix
+     */
+    public double[][] compute(int[] treeSizes, double[][] distanceMatrix) {
+        Checks.check(treeSizes.length == distanceMatrix.length, "The tree size must be same as the distance matrix's");
+        Checks.check(distanceMatrix.length == distanceMatrix[0].length, "The matrix must have same rows and same columns");
+
+        int n = treeSizes.length;
+        double matrix[][] = new double[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix[i][j] = computeSimilarity(distanceMatrix[i][j], treeSizes[i], treeSizes[j]);
             }
         }
         return matrix;

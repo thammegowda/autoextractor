@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class TreeNode {
 
+    protected String externalId;
     protected String nodeName;
     protected Node innerNode;
     protected TreeNode parent;
@@ -222,6 +223,14 @@ public class TreeNode {
 
     public static TreeNode createDummyNode(String name){
         return new TreeNode(name);
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public void setExternalId(String externalId) {
+        this.externalId = externalId;
     }
 
     public static void main(String[] args) throws Exception {

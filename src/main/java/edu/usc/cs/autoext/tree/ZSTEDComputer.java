@@ -76,6 +76,34 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
     }
 
     /**
+     * Computes edit distances between trees
+     * @param trees list of trees who's edit distance is to be computed
+     * @return an nxn square matrix with edit distance measure
+     */
+    public double[][] computeDistanceMatrix(List<TreeNode> trees){
+
+        int n = trees.size();
+        double distanceMatrix[][] = new double[n][n];
+        boolean symmetricMeasure = getCostMetric().isSymmetric();
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (i == j){
+                    //diagonal, same file, distance is zero
+                    distanceMatrix[i][j] = 0.0;
+                } else if (symmetricMeasure && i > j) {
+                    // lower diagonal and the measure is a symmetry
+                    distanceMatrix[i][j] = distanceMatrix[j][i];
+                } else {
+                    // upper diagonal or unsymmetrical, compute it
+                    distanceMatrix[i][j] = computeDistance(trees.get(i), trees.get(j));
+                }
+            }
+        }
+        return distanceMatrix;
+    }
+
+    /**
      * Computes the edit distance between files in a directory
      * @param inputDir directory of html pages
      * @throws IOException
@@ -99,37 +127,28 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
                 parser.reset();
             }
         }
-        if (docs.size() < 1) {
+        int n = docs.size();
+        if (n < 2) {
             throw new RuntimeException("At least 2 html/xml files should be present in the input directory");
         }
 
         ZSTEDComputer edComputer = new ZSTEDComputer();
         SimilarityComputer simComputer = new SimilarityComputer(edComputer);
-        int n = docs.size();
-        double distanceMatrix[][] = new double[n][n];
-        double similarityMatrix[][] = new double[n][n];
+        double[][] distMatrix = edComputer.computeDistanceMatrix(docs);
+        int treeSizes[] = new int[n];
+        for (int i = 0; i < docs.size(); i++) {
+            treeSizes[i] = docs.get(i).getSize();
+        }
+        double[][] simMatrix = simComputer.compute(treeSizes, distMatrix);
+
         System.out.println("#Index\tFile Path");
         for (int i = 0; i < htmlPaths.size(); i++) {
             System.out.println(i + "\t" + htmlPaths.get(i));
         }
         System.out.println("\n#Distance Matrix");
-        boolean symmetricMeasure = edComputer.getCostMetric().isSymmetric();
-
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (i == j){
-                    //diagonal, same file
-                    distanceMatrix[i][j] = 0.0;
-                } else if (symmetricMeasure && i > j) {
-                    // lowe diagonal, it is a symmetry
-                    distanceMatrix[i][j] = distanceMatrix[j][i];
-                } else {
-                    // upper diagonal or unsymmetrical, compute it
-                    distanceMatrix[i][j] = edComputer.computeDistance(docs.get(i), docs.get(j));
-                }
-                System.out.printf("%5.2f\t", distanceMatrix[i][j]);
-                similarityMatrix[i][j] = simComputer.computeSimilarity(distanceMatrix[i][j],
-                        docs.get(i).getSize(), docs.get(j).getSize());
+                System.out.printf("%5.2f\t", distMatrix[i][j]);
             }
             System.out.println();
         }
@@ -137,7 +156,7 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
         System.out.println("\n#Similarity Matrix");
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                System.out.printf("%5.2f\t", similarityMatrix[i][j]);
+                System.out.printf("%5.2f\t", simMatrix[i][j]);
             }
             System.out.println();
         }
@@ -145,7 +164,7 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
 
     public static void main(String[] args) throws IOException, SAXException {
         //args = "-in1 src/test/resources/html/simple/1.html -in2 src/test/resources/html/simple/2.html".split(" ");
-        //args = "-dir src/test/resources/html/simple/".split(" ");
+        args = "-dir src/test/resources/html/simple/".split(" ");
         CliArg arg = new CliArg();
         CmdLineParser parser = new CmdLineParser(arg);
         try {
