@@ -9,10 +9,17 @@ import java.util.List;
  */
 public class SimilarityComputer {
 
+    private final EditCost<TreeNode> costMetric;
     private EditDistanceComputer<TreeNode> distanceComputer;
 
     public SimilarityComputer(EditDistanceComputer<TreeNode> distanceComputer) {
+        this(distanceComputer.getCostMetric());
         this.distanceComputer = distanceComputer;
+
+    }
+
+    public SimilarityComputer(EditCost<TreeNode> costMetric) {
+        this.costMetric = costMetric;
     }
 
     /**
@@ -35,7 +42,7 @@ public class SimilarityComputer {
      */
     public double computeSimilarity(double distance, int size1, int size2){
         //Wish I could speak java here instead of maths :-)
-        return 1.0 - distance/(distanceComputer.getCostMetric().getMaxUnitCost() * (size1 + size2));
+        return 1.0 - distance/(costMetric.getMaxUnitCost() * (size1 + size2));
     }
     /**
      * Computes similarity matrix
