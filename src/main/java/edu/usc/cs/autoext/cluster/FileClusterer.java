@@ -4,6 +4,7 @@ import edu.usc.cs.autoext.tree.SimilarityComputer;
 import edu.usc.cs.autoext.tree.TreeNode;
 import edu.usc.cs.autoext.tree.ZSTEDComputer;
 import edu.usc.cs.autoext.utils.ParseUtils;
+import edu.usc.cs.autoext.utils.Timer;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -16,9 +17,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 /**
@@ -46,65 +49,119 @@ public class FileClusterer {
 
     public void cluster() throws IOException {
 
-        Stream<String> paths = Files.lines(listFile.toPath())
-                .map(String::trim)  //no spaces
-                .filter(s -> !(s.isEmpty() || s.startsWith("#")));// no empty lines and no comment lines
+        LOG.info("Create work directory ? {} ", workDir.mkdirs());
+        File reportFile = new File(workDir, REPORT_FILE);
+        try (PrintWriter report = new PrintWriter(
+                new BufferedWriter(new FileWriter(reportFile)))) {
+            Timer mainTimer = new Timer();
+            Timer timer = new Timer();
+            report.printf("Starting at : %d\n", timer.getStart());
+            report.printf("Input specified : %s\n", listFile.getAbsolutePath());
+            long st = System.currentTimeMillis();
+            Stream<String> paths = Files.lines(listFile.toPath())
+                    .map(String::trim)  //no spaces
+                    .filter(s -> !(s.isEmpty() || s.startsWith("#")));// no empty lines and no comment lines
 
-        List<TreeNode> trees = new ArrayList<>();
-        List<String> ids = new ArrayList<>();
-        paths.forEach(p -> {
-            try {
-                Document doc = ParseUtils.parseFile(p);
-                TreeNode tree = new TreeNode(doc, null);
-                tree.setExternalId(p);
-                ids.add(p);
-                trees.add(tree);
-            } catch (IOException | SAXException e) {
-                LOG.error("Skip : {}, reason:{}", p, e.getMessage());
+            List<TreeNode> trees = new ArrayList<>();
+            List<String> ids = new ArrayList<>();
+            AtomicInteger skipCount = new AtomicInteger(0);
+            paths.forEach(p -> {
+                try {
+                    Document doc = ParseUtils.parseFile(p);
+                    TreeNode tree = new TreeNode(doc, null);
+                    tree.setExternalId(p);
+                    ids.add(p);
+                    trees.add(tree);
+                } catch (IOException | SAXException e) {
+                    LOG.error("Skip : {}, reason:{}", p, e.getMessage());
+                    skipCount.incrementAndGet();
+                }
+            });
+
+            report.printf("Work Directory :%s\n", workDir.getAbsolutePath());
+            report.printf("Parsed %d files and skipped %d files \n", trees.size(), skipCount.get());
+
+            report.printf("Time taken to parse : %dms\n", timer.reset());
+
+            //Step1: write ids/paths to separate file
+            File idsFile = new File(workDir, IDS_FILE);
+            Files.write(idsFile.toPath(), ids);
+            LOG.info("Wrote paths to {} ", idsFile.toPath());
+            report.printf("Wrote %d ids to %s file in %dms\n", ids.size(), idsFile, timer.reset());
+
+            //Step 2: write edit distances to CSV
+            ZSTEDComputer edComputer = new ZSTEDComputer();
+            //Step 3: write similarity to CSV
+            //write cluster to a file
+            double[][] distanceMatrix = edComputer.computeDistanceMatrix(trees);
+            report.printf("Computed distance matrix in %dms\n", timer.reset());
+            File distanceFile = new File(workDir, ED_DIST_FILE);
+            writeToCSV(distanceMatrix, distanceFile);
+            report.printf("Stored distance matrix in %dms\n", timer.reset());
+
+            //STEP 4: compute the similarity matrix
+            int[] sizes = new int[trees.size()];
+            String labels[] = new String[trees.size()];
+            for (int i = 0; i < trees.size(); i++) {
+                sizes[i] = trees.get(i).getSize();
+                labels[i] = trees.get(i).getExternalId();
             }
-        });
-        LOG.info("Work Directory :{}", workDir.getAbsolutePath());
-        LOG.info("Created work directory ? {} ", workDir.mkdirs());
+            report.printf("obtained tree sizes and labels in %dms\n", timer.reset());
+            SimilarityComputer computer = new SimilarityComputer(edComputer.getCostMetric());
+            double[][] similarityMatrix = computer.compute(sizes, distanceMatrix);
+            report.printf("Computed similarity matrix in %dms\n", timer.reset());
+            File similarityFile = new File(workDir, TREE_SIM_FILE);
+            writeToCSV(similarityMatrix, similarityFile);
+            report.printf("Stored similarity matrix in %dms\n", timer.reset());
 
-        //Step1: write ids/paths to separate file
-        File idsFile = new File(workDir, IDS_FILE);
-        Files.write(idsFile.toPath(), ids);
-        LOG.info("Wrote paths to {} ", idsFile.toPath());
+            //STEP 5: cluster
+            SharedNeighborClusterer clusterer = new SharedNeighborClusterer();
+            double similarityThreshold = 0.8;
+            int k = 100;
+            int kt = (int) (100 * similarityThreshold);
+            report.printf("Clustering:: SimilarityThreshold=%f," +
+                    " no. of neighbors:%d, shared neighbors=%d\n", similarityThreshold, k, kt);
+            List<List<String>> clusters = clusterer.cluster(similarityMatrix,
+                    labels, similarityThreshold, k, kt);
+            report.printf("Computed clusters in %dms\n", timer.reset());
+            File clustersFile = new File(workDir, CLUSTER_FILE);
+            writeClusters(clusters, clustersFile);
+            report.printf("Wrote clusters in %dms\n", timer.reset());
 
-        //Step 2: write edit distances to CSV
-        ZSTEDComputer edComputer = new ZSTEDComputer();
-        //Step 3: write similarity to CSV
-        //write cluster to a file
-        double[][] distanceMatrix = edComputer.computeDistanceMatrix(trees);
-        File distanceFile = new File(workDir, ED_DIST_FILE);
-        writeToCSV(distanceMatrix, distanceFile);
-
-
-
-        //STEP 4: compute the similarity matrix
-        int[] sizes = new int[trees.size()];
-        for (int i = 0; i < trees.size(); i++) {
-            sizes[i] = trees.get(i).getSize();
+            report.printf("Done! Total time = %dms\n", mainTimer.read());
         }
-        SimilarityComputer computer = new SimilarityComputer(edComputer.getCostMetric());
-        double[][] similarityMatrix = computer.compute(sizes, distanceMatrix);
-        File similarityFile = new File(workDir, TREE_SIM_FILE);
-        writeToCSV(similarityMatrix, similarityFile);
-
-
-        //STEP 5:
-        SharedNeighborClusterer clusterer = new SharedNeighborClusterer();
-        double similarityThreshold = 0.8;
-        String labels[] = null;
-        int k = 100;
-        int kt = (int) (100 * similarityThreshold);
-        List<List<String>> clusters = clusterer.cluster(similarityMatrix, labels, similarityThreshold, k, kt);
-
+        LOG.info("Done.. Report stored in {} ", reportFile.getAbsolutePath());
     }
 
-    private void writeToCSV(double[][] distanceMatrix, File csvFile) throws IOException {
+    /**
+     * Writes clusters to a clusters file
+     * @param clusters the clusters list
+     * @param outputFile output file
+     * @throws IOException when an io error occurs
+     */
+    public void writeClusters(List<List<String>> clusters, File outputFile ) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))){
+            writer.write("##Total Clusters:" + clusters.size() + "\n");
+            for (int i = 0; i < clusters.size(); i++) {
+                writer.write("\n#Cluster:" + i + "\n");
+                List<String> ids = clusters.get(i);
+                for (String id : ids) {
+                    writer.write(id);
+                    writer.write("\n");
+                }
+            }
+        }
+    }
+
+    /**
+     * Writes given matrix to CSV file
+     * @param matrix the matrix or table
+     * @param csvFile the target csv file
+     * @throws IOException when an IO error occurs
+     */
+    private void writeToCSV(double[][] matrix, File csvFile) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
-            for (double[] row : distanceMatrix) {
+            for (double[] row : matrix) {
                 writer.write(String.valueOf(row[0]));
                 for (int i = 1; i < row.length; i++) {
                     writer.append(SEP).append(String.valueOf(row[i]));
@@ -115,6 +172,7 @@ public class FileClusterer {
     }
 
     public static void main(String[] args) throws IOException {
+        //args = "-list in.list -workdir simple-work".split(" ");
         FileClusterer instance = new FileClusterer();
         CmdLineParser parser = new CmdLineParser(instance);
         try {
