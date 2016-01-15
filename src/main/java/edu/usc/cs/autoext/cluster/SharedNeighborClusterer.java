@@ -38,20 +38,37 @@ public class SharedNeighborClusterer {
             (o1, o2) -> Double.compare(o2.pos0, o1.pos0);
 
     /**
+     * checks if the clusters needs to be merged into one
+     * @param i cluster 1
+     * @param j cluster 2
+     * @param simThreshold minimum threshold to consider if the clusters are similar
+     * @return true if clusters are similar; false otherwise
+     */
+    public boolean areClustersSimilar(BitSet i, BitSet j, double simThreshold){
+
+        int a = i.cardinality();
+        int b = j.cardinality();
+        BitSet intersection = (BitSet) i.clone();
+        intersection.and(j);
+        int aIntersectB = intersection.cardinality();
+        double similarity = (double) aIntersectB / (a + b - aIntersectB);
+        return similarity >= simThreshold;
+    }
+
+
+    /**
      * Clusters documents
      * @param simMatrix similarity matrix, values in between [0.0 to 1.0] inclusive
      * @param labels labels for items in similarity matrix
      * @param simThreshold similarity threshold to treat that the items are similar, usually >= 0.8
      * @param k number of nearest neighbours to start with
-     * @param kt threshold number of neighbours to put onto same cluster
      */
     public List<List<String>> cluster(double simMatrix[][], String[] labels,
                                       double simThreshold,
-                                      int k, int kt){
+                                      int k){
         long statTime = System.currentTimeMillis();
         Checks.check(simMatrix.length == labels.length,
                 "Couldn't match labels to similarity matrix ");
-        Checks.check(kt < k, "threshold 'kt' should be <= 'k'");
 
         //computing the table
         List<BitSet> table = new LinkedList<>();
@@ -68,25 +85,13 @@ public class SharedNeighborClusterer {
             numCollapses = 0;
             long st = System.currentTimeMillis();
             for (int i = 0; i < table.size(); i++) {
-                if (table.get(i).cardinality() < kt) {
-                    //not possible
-                    continue;
-                }
                 for (int j = i + 1; j < table.size(); j++) {
-                    BitSet jThNeighbors = table.get(j);
-                    if (jThNeighbors.cardinality() < kt) {
-                        //not possible
-                        continue;
-                    }
-                    BitSet sharedNeighbors = (BitSet) table.get(i).clone();
-                    sharedNeighbors.and(jThNeighbors); //set intersection in bitwise
-                    if (sharedNeighbors.cardinality() >= kt) {
+                    if (areClustersSimilar(table.get(i), table.get(j), simThreshold)) {
                         // threshold or more neighbors in the intersection, collapse this cluster
                         numCollapses++;
                         // drop j
                         table.remove(j);
                         // replace j's index with i's index everywhere else
-
                         for (int l = j ; l < table.size(); l++) {
                             BitSet set = table.get(l);
                             if (set.get(j)) {
@@ -99,7 +104,7 @@ public class SharedNeighborClusterer {
                 }
             }
             LOG.debug("Iteration {} took {}ms", iteration, (System.currentTimeMillis() - st));
-            LOG.debug("Iteration {} made {} collapses, num Clusters = {}", numCollapses, table.size());
+            LOG.debug("Iteration {} made {} collapses, num Clusters = {}", iteration, numCollapses, table.size());
             iteration++;
         } while (numCollapses > 0 && iteration < maxIterations);
         //if you found this code interesting, the credit goes to
@@ -179,7 +184,7 @@ public class SharedNeighborClusterer {
         System.out.println("Number of trees found :" + nodes.size());
         double[][] sims = computer.compute(nodes);
         SharedNeighborClusterer clusterer = new SharedNeighborClusterer();
-        clusterer.cluster(sims, fileNames, 0.85, 6, 3);
+        List<List<String>> list = clusterer.cluster(sims, fileNames, 0.75, 100);
 
     }
 }

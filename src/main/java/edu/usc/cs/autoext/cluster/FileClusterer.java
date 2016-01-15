@@ -114,15 +114,16 @@ public class FileClusterer {
             writeToCSV(similarityMatrix, similarityFile);
             report.printf("Stored similarity matrix in %dms\n", timer.reset());
 
+            //TODO: add style similarity and aggregate
             //STEP 5: cluster
             SharedNeighborClusterer clusterer = new SharedNeighborClusterer();
-            double similarityThreshold = 0.8;
+            //TODO: make these configurable
+            double similarityThreshold = 0.75;
             int k = 100;
-            int kt = (int) (100 * similarityThreshold);
             report.printf("Clustering:: SimilarityThreshold=%f," +
-                    " no. of neighbors:%d, shared neighbors=%d\n", similarityThreshold, k, kt);
+                    " no. of neighbors:%d\n", similarityThreshold, k);
             List<List<String>> clusters = clusterer.cluster(similarityMatrix,
-                    labels, similarityThreshold, k, kt);
+                    labels, similarityThreshold, k);
             report.printf("Computed clusters in %dms\n", timer.reset());
             File clustersFile = new File(workDir, CLUSTER_FILE);
             writeClusters(clusters, clustersFile);
@@ -172,7 +173,7 @@ public class FileClusterer {
     }
 
     public static void main(String[] args) throws IOException {
-        //args = "-list in.list -workdir simple-work".split(" ");
+        args = "-list in.list -workdir simple-work".split(" ");
         FileClusterer instance = new FileClusterer();
         CmdLineParser parser = new CmdLineParser(instance);
         try {
