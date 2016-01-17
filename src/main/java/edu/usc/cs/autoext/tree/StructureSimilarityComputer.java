@@ -1,24 +1,28 @@
 package edu.usc.cs.autoext.tree;
 
+import edu.usc.cs.autoext.base.EditCost;
+import edu.usc.cs.autoext.base.EditDistanceComputer;
+import edu.usc.cs.autoext.base.SimilarityComputer;
 import edu.usc.cs.autoext.utils.Checks;
 
 import java.util.List;
 
 /**
- * Created by tg on 1/4/16.
+ *Computes the structural similarity between two DOM Trees
+ *
  */
-public class SimilarityComputer {
+public class StructureSimilarityComputer implements SimilarityComputer<TreeNode> {
 
     private final EditCost<TreeNode> costMetric;
     private EditDistanceComputer<TreeNode> distanceComputer;
 
-    public SimilarityComputer(EditDistanceComputer<TreeNode> distanceComputer) {
+    public StructureSimilarityComputer(EditDistanceComputer<TreeNode> distanceComputer) {
         this(distanceComputer.getCostMetric());
         this.distanceComputer = distanceComputer;
 
     }
 
-    public SimilarityComputer(EditCost<TreeNode> costMetric) {
+    public StructureSimilarityComputer(EditCost<TreeNode> costMetric) {
         this.costMetric = costMetric;
     }
 
@@ -28,7 +32,8 @@ public class SimilarityComputer {
      * @param tree2 second tree
      * @return similarity measure
      */
-    public double computeSimilarity(TreeNode tree1, TreeNode tree2){
+    @Override
+    public double compute(TreeNode tree1, TreeNode tree2){
         return computeSimilarity(distanceComputer.computeDistance(tree1, tree2),
                 tree1.getSize(), tree2.getSize());
     }
@@ -57,14 +62,14 @@ public class SimilarityComputer {
         double matrix[][] = new double[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                matrix[i][j] = computeSimilarity(trees.get(i), trees.get(j));
+                matrix[i][j] = compute(trees.get(i), trees.get(j));
             }
         }
         return matrix;
     }
 
     /**
-     * Computes similarity matrix
+     * Computes similarity matrix from distance matrix
      * @param treeSizes the number/size of elements in each tree
      * @param distanceMatrix the distance matrix
      * @return similarity matrix
@@ -82,4 +87,5 @@ public class SimilarityComputer {
         }
         return matrix;
     }
+
 }

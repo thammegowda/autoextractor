@@ -1,5 +1,7 @@
 package edu.usc.cs.autoext.tree;
 
+import edu.usc.cs.autoext.base.EditCost;
+
 import java.util.List;
 import java.util.stream.Collectors;
 

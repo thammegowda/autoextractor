@@ -1,5 +1,7 @@
 package edu.usc.cs.autoext.tree;
 
+import edu.usc.cs.autoext.base.EditCost;
+
 /**
  * Created by tg on 12/30/15.
  */

@@ -1,4 +1,4 @@
-package edu.usc.cs.autoext.tree;
+package edu.usc.cs.autoext.base;
 
 /**
  * Defines a contract for edit distance computer

@@ -1,5 +1,7 @@
 package edu.usc.cs.autoext.tree;
 
+import edu.usc.cs.autoext.base.EditCost;
+import edu.usc.cs.autoext.base.EditDistanceComputer;
 import org.cyberneko.html.parsers.DOMParser;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -133,7 +135,7 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
         }
 
         ZSTEDComputer edComputer = new ZSTEDComputer();
-        SimilarityComputer simComputer = new SimilarityComputer(edComputer);
+        StructureSimilarityComputer simComputer = new StructureSimilarityComputer(edComputer);
         double[][] distMatrix = edComputer.computeDistanceMatrix(docs);
         int treeSizes[] = new int[n];
         for (int i = 0; i < docs.size(); i++) {

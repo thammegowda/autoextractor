@@ -1,4 +1,6 @@
-package edu.usc.cs.autoext.tree;
+package edu.usc.cs.autoext.base;
+
+import edu.usc.cs.autoext.tree.DefaultEditCost;
 
 /**
  * Defines contract for Edit cost used by edit cost computer
