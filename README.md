@@ -2,6 +2,10 @@
 An intelligent extractor library which learns the structures of the input web pages and then figures out a strategy for scraping the structured content
 
 
+NOTE : The project is under active development, as a result the README is out of sync with the codebase.
+
+TODO: update this file with the description of all new features.
+
 # Example Usage:
 ## 1. Structural Similarity Between HTML/XML documents
 <pre>
