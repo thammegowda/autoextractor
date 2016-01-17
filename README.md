@@ -10,7 +10,7 @@ TODO: update this file with the description of all new features.
 ## 1. Structural Similarity Between HTML/XML documents
 <pre>
 $ mvn clean compile package
-$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.tree.ZSTEDComputer \
+$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.irds.autoext.tree.ZSTEDComputer \
         -dir src/test/resources/html/simple/
 
 #Index  File Path
@@ -28,7 +28,7 @@ $ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.c
  
 <pre>
 $ mvn clean package
-$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.cluster.FileClusterer
+$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.irds.autoext.cluster.FileClusterer
     Option "-list" is required
     -list FILE    : path to a file containing paths to html files that requires
                      clustering
@@ -38,7 +38,7 @@ $ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.c
 $ find src/test/resources/html/simple/ -type f  > list.txt
 
 # Cluster
-$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.cluster.FileClusterer \
+$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.irds.autoext.cluster.FileClusterer \
         -list list.txt  -workdir out
 
 # Report 
