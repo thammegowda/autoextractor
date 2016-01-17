@@ -24,6 +24,11 @@ public class StyleSimilarityComputer implements SimilarityComputer<TreeNode> {
         Set<String> setB = xPathUtil.findUniqueClassNames(elem2);
         int modA = setA.size();
         int modB = setB.size();
+        if (modA == 0 && modB == 0) {
+            //Cant be determined by jaccards similarity;
+            // however, by definition, they are very similar in empty style
+            return 1.0;
+        }
         int intersectSize = countIntersection(setA, setB);
         // the jaccards similarity
         return intersectSize / (modA + modB - intersectSize);
