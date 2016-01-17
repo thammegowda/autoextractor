@@ -13,9 +13,9 @@ import static org.junit.Assert.*;
 /**
  * Created by tg on 1/16/16.
  */
-public class StyleSimilarityComputerTest {
+public class StyleSimComputerTest {
 
-    StyleSimilarityComputer instance = new StyleSimilarityComputer();
+    StyleSimComputer instance = new StyleSimComputer();
 
     @Test
     public void testCountIntersection() throws Exception {

@@ -11,18 +11,18 @@ import java.util.List;
  *Computes the structural similarity between two DOM Trees
  *
  */
-public class StructureSimilarityComputer implements SimilarityComputer<TreeNode> {
+public class StructureSimComputer implements SimilarityComputer<TreeNode> {
 
     private final EditCost<TreeNode> costMetric;
     private EditDistanceComputer<TreeNode> distanceComputer;
 
-    public StructureSimilarityComputer(EditDistanceComputer<TreeNode> distanceComputer) {
+    public StructureSimComputer(EditDistanceComputer<TreeNode> distanceComputer) {
         this(distanceComputer.getCostMetric());
         this.distanceComputer = distanceComputer;
 
     }
 
-    public StructureSimilarityComputer(EditCost<TreeNode> costMetric) {
+    public StructureSimComputer(EditCost<TreeNode> costMetric) {
         this.costMetric = costMetric;
     }
 

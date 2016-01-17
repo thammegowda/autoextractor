@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * Computes CSS style Similarity between two DOM trees
  */
-public class StyleSimilarityComputer implements SimilarityComputer<TreeNode> {
+public class StyleSimComputer implements SimilarityComputer<TreeNode> {
 
     private static XPathEvaluator xPathUtil = new XPathEvaluator();
 

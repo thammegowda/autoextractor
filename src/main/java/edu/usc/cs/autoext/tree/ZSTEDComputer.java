@@ -135,7 +135,7 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
         }
 
         ZSTEDComputer edComputer = new ZSTEDComputer();
-        StructureSimilarityComputer simComputer = new StructureSimilarityComputer(edComputer);
+        StructureSimComputer simComputer = new StructureSimComputer(edComputer);
         double[][] distMatrix = edComputer.computeDistanceMatrix(docs);
         int treeSizes[] = new int[n];
         for (int i = 0; i < docs.size(); i++) {

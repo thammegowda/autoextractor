@@ -1,6 +1,6 @@
 package edu.usc.cs.autoext.cluster;
 
-import edu.usc.cs.autoext.tree.StructureSimilarityComputer;
+import edu.usc.cs.autoext.tree.StructureSimComputer;
 import edu.usc.cs.autoext.tree.TreeNode;
 import edu.usc.cs.autoext.tree.ZSTEDComputer;
 import edu.usc.cs.autoext.utils.ParseUtils;
@@ -107,7 +107,7 @@ public class FileClusterer {
                 labels[i] = trees.get(i).getExternalId();
             }
             report.printf("obtained tree sizes and labels in %dms\n", timer.reset());
-            StructureSimilarityComputer computer = new StructureSimilarityComputer(edComputer.getCostMetric());
+            StructureSimComputer computer = new StructureSimComputer(edComputer.getCostMetric());
             double[][] similarityMatrix = computer.compute(sizes, distanceMatrix);
             report.printf("Computed similarity matrix in %dms\n", timer.reset());
             File similarityFile = new File(workDir, TREE_SIM_FILE);

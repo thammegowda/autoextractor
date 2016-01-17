@@ -3,6 +3,7 @@ package edu.usc.cs.autoext.tree;
 import edu.usc.cs.autoext.base.SimilarityComputer;
 import edu.usc.cs.autoext.utils.Checks;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
  * @author Thamme Gowda N
  * @since Jan 16, 2016
  */
-public class GrossSimilarityComputer<T> implements SimilarityComputer<T> {
+public class GrossSimComputer<T> implements SimilarityComputer<T> {
 
     private final List<SimilarityComputer<T>> computers;
     private final List<Double> weights;
@@ -23,8 +24,8 @@ public class GrossSimilarityComputer<T> implements SimilarityComputer<T> {
      *                The weight at the index i in this array specifies the weight for similaritycomputer at i in the argument 1.
      *                The sum of all weights should add to 1.0
      */
-    public GrossSimilarityComputer(List<SimilarityComputer<T>> computers,
-                                   List<Double> weights) {
+    public GrossSimComputer(List<SimilarityComputer<T>> computers,
+                            List<Double> weights) {
         this.computers = computers;
         this.weights = weights;
         Checks.check(computers.size() == weights.size(),
@@ -45,5 +46,21 @@ public class GrossSimilarityComputer<T> implements SimilarityComputer<T> {
             result += computers.get(i).compute(obj1, obj2) * weights.get(i);
         }
         return result;
+    }
+
+    /**
+     k* A factory method for creating similarity computer that aggregates structural and stylistic measures
+     * @param structureSimWeight The fraction weight of weight for structural similarity.
+     *                           The remaining fraction, i.e. (1 - weight), will be taken as weight for style similarity
+     * @return the similarity computer that internally aggregates structure and style measures;
+     */
+    public static GrossSimComputer<TreeNode> createWebSimilarityComputer(double structureSimWeight){
+        Checks.check(structureSimWeight <= 1.0 && structureSimWeight >= 0.0, "The weight should be in between [0.0, 1.0]");
+        ZSTEDComputer edComputer = new ZSTEDComputer();
+        StructureSimComputer structSimComputer = new StructureSimComputer(edComputer);
+        StyleSimComputer styleSimComputer = new StyleSimComputer();
+        List<SimilarityComputer<TreeNode>> similarityComputers = Arrays.asList(structSimComputer, styleSimComputer);
+        List<Double> weights = Arrays.asList(structureSimWeight, 1.0 - structureSimWeight);
+        return new GrossSimComputer<>(similarityComputers, weights);
     }
 }

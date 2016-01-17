@@ -1,12 +1,12 @@
 package edu.usc.cs.autoext.base;
 
-import edu.usc.cs.autoext.tree.StructureSimilarityComputer;
-import edu.usc.cs.autoext.tree.StyleSimilarityComputer;
+import edu.usc.cs.autoext.tree.StructureSimComputer;
+import edu.usc.cs.autoext.tree.StyleSimComputer;
 
 /**
  * Generic Similarity computer contract. Look into the implementations for specific details
- * @see StructureSimilarityComputer
- * @see  StyleSimilarityComputer
+ * @see StructureSimComputer
+ * @see  StyleSimComputer
  * @author Thamme Gowda
  *
  */

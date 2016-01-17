@@ -1,6 +1,6 @@
 package edu.usc.cs.autoext.cluster;
 
-import edu.usc.cs.autoext.tree.StructureSimilarityComputer;
+import edu.usc.cs.autoext.tree.StructureSimComputer;
 import edu.usc.cs.autoext.tree.TreeNode;
 import edu.usc.cs.autoext.tree.ZSTEDComputer;
 import edu.usc.cs.autoext.utils.Checks;
@@ -175,7 +175,7 @@ public class SharedNeighborClusterer {
         String[] fileNames = new File(dir).list();
         File[] files = new File(dir).listFiles();
 
-        StructureSimilarityComputer computer = new StructureSimilarityComputer(new ZSTEDComputer());
+        StructureSimComputer computer = new StructureSimComputer(new ZSTEDComputer());
         List<TreeNode> nodes = new ArrayList<>();
         for (File file : files) {
             Document doc = ParseUtils.parseFile(file.getAbsolutePath());
