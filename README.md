@@ -10,7 +10,8 @@ TODO: update this file with the description of all new features.
 ## 1. Structural Similarity Between HTML/XML documents
 <pre>
 $ mvn clean compile package
-$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.tree.ZSTEDComputer -dir src/test/resources/html/simple/
+$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.tree.ZSTEDComputer \
+        -dir src/test/resources/html/simple/
 
 #Index  File Path
 0       /home/tg/work/projects/oss/autoextractor/src/test/resources/html/simple/3.html
@@ -22,6 +23,44 @@ $ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.c
 13.000000       0.000000        3.000000        
 10.000000       3.000000        0.000000 
 </pre>
+
+## 2. Clustering based on style and structure
+ 
+<pre>
+$ mvn clean package
+$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.cluster.FileClusterer
+    Option "-list" is required
+    -list FILE    : path to a file containing paths to html files that requires
+                     clustering
+     -workdir FILE : Path to directory to create intermediate files and reports
+
+# Creating input list of htmls
+$ find src/test/resources/html/simple/ -type f  > list.txt
+
+# Cluster
+$ java -cp target/autoextractor-0.1-SNAPSHOT-jar-with-dependencies.jar edu.usc.cs.autoext.cluster.FileClusterer \
+        -list list.txt  -workdir out
+
+# Report 
+$ cat out/report.txt
+
+# Similarity Matrix
+$ cat out/gross-sim.csv
+
+# Clusters
+$ cat out/clusters.txt 
+    ##Total Clusters:2
+    
+    #Cluster:0
+    src/test/resources/html/simple/3.html
+    
+    #Cluster:1
+    src/test/resources/html/simple/2.html
+    src/test/resources/html/simple/1.html
+
+ 
+</pre>
+
 
 # Developers: 
 * [Thamme Gowda, USC](mailto:tgowdan@gmail.com)
