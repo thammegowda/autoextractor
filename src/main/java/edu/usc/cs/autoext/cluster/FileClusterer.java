@@ -1,8 +1,10 @@
 package edu.usc.cs.autoext.cluster;
 
+import edu.usc.cs.autoext.tree.GrossSimComputer;
 import edu.usc.cs.autoext.tree.StructureSimComputer;
 import edu.usc.cs.autoext.tree.TreeNode;
 import edu.usc.cs.autoext.tree.ZSTEDComputer;
+import edu.usc.cs.autoext.utils.MatrixUtils;
 import edu.usc.cs.autoext.utils.ParseUtils;
 import edu.usc.cs.autoext.utils.Timer;
 import org.kohsuke.args4j.CmdLineException;
@@ -22,10 +24,13 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Created by tg on 1/5/16.
+ * This class offers commandline interface to make use of similarity and clustering
+ * algorithms.
+ *
  */
 public class FileClusterer {
 
@@ -33,6 +38,7 @@ public class FileClusterer {
     public static final String IDS_FILE = "ids.txt";
     public static final String ED_DIST_FILE = "edit-distance.csv";
     public static final String TREE_SIM_FILE = "tree-sim.csv";
+    public static final String GROSS_SIM_FILE = "gross-sim.csv";
     public static final String CLUSTER_FILE = "clusters.txt";
     public static final String REPORT_FILE = "report.txt";
     public static final char SEP = ',';
@@ -47,7 +53,10 @@ public class FileClusterer {
             usage = "Path to directory to create intermediate files and reports")
     private  File workDir;
 
-    public void cluster() throws IOException {
+
+    //This will be removed
+    @Deprecated
+    private void clusterDebug() throws IOException {
 
         LOG.info("Create work directory ? {} ", workDir.mkdirs());
         File reportFile = new File(workDir, REPORT_FILE);
@@ -57,30 +66,13 @@ public class FileClusterer {
             Timer timer = new Timer();
             report.printf("Starting at : %d\n", timer.getStart());
             report.printf("Input specified : %s\n", listFile.getAbsolutePath());
-            long st = System.currentTimeMillis();
-            Stream<String> paths = Files.lines(listFile.toPath())
-                    .map(String::trim)  //no spaces
-                    .filter(s -> !(s.isEmpty() || s.startsWith("#")));// no empty lines and no comment lines
 
-            List<TreeNode> trees = new ArrayList<>();
-            List<String> ids = new ArrayList<>();
             AtomicInteger skipCount = new AtomicInteger(0);
-            paths.forEach(p -> {
-                try {
-                    Document doc = ParseUtils.parseFile(p);
-                    TreeNode tree = new TreeNode(doc, null);
-                    tree.setExternalId(p);
-                    ids.add(p);
-                    trees.add(tree);
-                } catch (IOException | SAXException e) {
-                    LOG.error("Skip : {}, reason:{}", p, e.getMessage());
-                    skipCount.incrementAndGet();
-                }
-            });
+            List<TreeNode> trees = readTrees(skipCount);
+            List<String> ids = trees.stream().map(TreeNode::getExternalId).collect(Collectors.toList());
 
             report.printf("Work Directory :%s\n", workDir.getAbsolutePath());
             report.printf("Parsed %d files and skipped %d files \n", trees.size(), skipCount.get());
-
             report.printf("Time taken to parse : %dms\n", timer.reset());
 
             //Step1: write ids/paths to separate file
@@ -128,10 +120,89 @@ public class FileClusterer {
             File clustersFile = new File(workDir, CLUSTER_FILE);
             writeClusters(clusters, clustersFile);
             report.printf("Wrote clusters in %dms\n", timer.reset());
-
             report.printf("Done! Total time = %dms\n", mainTimer.read());
         }
         LOG.info("Done.. Report stored in {} ", reportFile.getAbsolutePath());
+    }
+
+
+    public void cluster() throws IOException {
+
+        LOG.info("Create work directory ? {} ", workDir.mkdirs());
+        File reportFile = new File(workDir, REPORT_FILE);
+        try (PrintWriter report = new PrintWriter(
+                new BufferedWriter(new FileWriter(reportFile)))) {
+            Timer mainTimer = new Timer();
+            Timer timer = new Timer();
+            report.printf("Starting at : %d\n", timer.getStart());
+            report.printf("Input specified : %s\n", listFile.getAbsolutePath());
+
+            AtomicInteger skipCount = new AtomicInteger(0);
+            List<TreeNode> trees = readTrees(skipCount);
+            List<String> labels = trees.stream().map(TreeNode::getExternalId)
+                    .collect(Collectors.toList());
+            report.printf("Parsed %d files and skipped %d files \n", trees.size(), skipCount.get());
+            report.printf("Work Directory :%s\n", workDir.getAbsolutePath());
+            report.printf("Time taken to parse : %dms\n", timer.reset());
+
+            //Step1: write ids/paths to separate file
+            File idsFile = new File(workDir, IDS_FILE);
+            Files.write(idsFile.toPath(), labels);
+            LOG.info("Wrote paths to {} ", idsFile.toPath());
+            report.printf("Wrote %d ids to %s file in %dms\n", labels.size(), idsFile, timer.reset());
+
+            //Step 2: Compute similarity and store to file
+            //TODO: make this configurable
+            GrossSimComputer<TreeNode> simComputer = GrossSimComputer.createWebSimilarityComputer(0.8);
+            timer.reset();
+            double[][] similarityMatrix = MatrixUtils.computeSymmetricMatrix(simComputer, trees);
+            report.printf("Computed Gross similarity matrix in %dms\n", timer.reset());
+            File similarityFile = new File(workDir, GROSS_SIM_FILE);
+            writeToCSV(similarityMatrix, similarityFile);
+            report.printf("Stored similarity matrix in %dms\n", timer.reset());
+
+            //STEP 5: cluster
+            SharedNeighborClusterer clusterer = new SharedNeighborClusterer();
+            //TODO: make these configurable
+            double similarityThreshold = 0.75;
+            int k = 100;
+            report.printf("Clustering:: SimilarityThreshold=%f," +
+                    " no. of neighbors:%d\n", similarityThreshold, k);
+            List<List<String>> clusters = clusterer.cluster(similarityMatrix,
+                    labels.toArray(new String[labels.size()]), similarityThreshold, k);
+            report.printf("Computed clusters in %dms\n", timer.reset());
+            File clustersFile = new File(workDir, CLUSTER_FILE);
+            writeClusters(clusters, clustersFile);
+            report.printf("Wrote clusters in %dms\n", timer.reset());
+            report.printf("Done! Total time = %dms\n", mainTimer.read());
+        }
+        LOG.info("Done.. Report stored in {} ", reportFile.getAbsolutePath());
+    }
+
+    /**
+     * parses the files and builts trees
+     * @param skipCounter the counter to be used to increment when some files are skipped
+     * @return list of trees read
+     * @throws IOException when an io error occures
+     */
+    private List<TreeNode> readTrees(AtomicInteger skipCounter) throws IOException {
+        List<TreeNode> trees = new ArrayList<>();
+        Stream<String> paths = Files.lines(listFile.toPath())
+                .map(String::trim)  //no spaces
+                .filter(s -> !(s.isEmpty() || s.startsWith("#")));// no empty lines and no comment lines
+
+        paths.forEach(p -> {
+            try {
+                Document doc = ParseUtils.parseFile(p);
+                TreeNode tree = new TreeNode(doc.getDocumentElement(), null);
+                tree.setExternalId(p);
+                trees.add(tree);
+            } catch (IOException | SAXException e) {
+                skipCounter.incrementAndGet();
+                LOG.error("Skip : {}, reason:{}", p, e.getMessage());
+            }
+        });
+        return trees;
     }
 
     /**
@@ -173,7 +244,7 @@ public class FileClusterer {
     }
 
     public static void main(String[] args) throws IOException {
-        args = "-list in.list -workdir simple-work".split(" ");
+        //args = "-list in.list -workdir simple-work".split(" ");
         FileClusterer instance = new FileClusterer();
         CmdLineParser parser = new CmdLineParser(instance);
         try {

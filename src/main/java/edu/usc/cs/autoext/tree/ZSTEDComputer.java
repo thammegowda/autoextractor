@@ -2,6 +2,7 @@ package edu.usc.cs.autoext.tree;
 
 import edu.usc.cs.autoext.base.EditCost;
 import edu.usc.cs.autoext.base.EditDistanceComputer;
+import edu.usc.cs.autoext.utils.MatrixUtils;
 import org.cyberneko.html.parsers.DOMParser;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -148,25 +149,15 @@ public class ZSTEDComputer implements EditDistanceComputer<TreeNode> {
             System.out.println(i + "\t" + htmlPaths.get(i));
         }
         System.out.println("\n#Distance Matrix");
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                System.out.printf("%5.2f\t", distMatrix[i][j]);
-            }
-            System.out.println();
-        }
+        MatrixUtils.printMatrix(distMatrix);
 
         System.out.println("\n#Similarity Matrix");
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                System.out.printf("%5.2f\t", simMatrix[i][j]);
-            }
-            System.out.println();
-        }
+        MatrixUtils.printMatrix(simMatrix);
     }
 
     public static void main(String[] args) throws IOException, SAXException {
         //args = "-in1 src/test/resources/html/simple/1.html -in2 src/test/resources/html/simple/2.html".split(" ");
-        args = "-dir src/test/resources/html/simple/".split(" ");
+        //args = "-dir src/test/resources/html/simple/".split(" ");
         CliArg arg = new CliArg();
         CmdLineParser parser = new CmdLineParser(arg);
         try {
