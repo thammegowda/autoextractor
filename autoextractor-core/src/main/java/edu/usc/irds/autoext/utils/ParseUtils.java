@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class ParseUtils {
 
-    private static DOMParser domParser = new DOMParser();
+    private static final DOMParser domParser = new DOMParser();
 
     public static Document parseFile(String path) throws IOException, SAXException {
         synchronized (domParser) {

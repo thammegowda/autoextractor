@@ -15,43 +15,39 @@ import scala.collection.Iterator;
 import scala.collection.mutable.ArrayBuffer;
 import scala.reflect.ClassTag;
 
-import java.util.List;
 import java.util.function.Function;
 
 /**
  * Creates Nutch Content RDD from a list of Sequence file paths
  * @author Thamme Gowda
  */
-public class NutchContentRDD extends RDD<Content> {
+public class IndexedNutchContentRDD extends RDD<IndexedContent> {
 
-    public static final Logger LOG = LoggerFactory.getLogger(NutchContentRDD.class);
-    private static final ClassTag<Content> CONTENT_TAG = LangUtils.getClassTag(Content.class);
-
+    public static final Logger LOG = LoggerFactory.getLogger(IndexedNutchContentRDD.class);
     private final Function<String, Boolean> contentTypeFilter;
+    private static final ClassTag<IndexedContent> CONTENT_TAG = LangUtils.getClassTag(IndexedContent.class);
     private final ContentPartition[] partitions;
 
     /**
      * Creates Nutch Content RDD
      * @param context the spark Context
-     * @param parts list of paths to nutch segment content data
+     * @param path path to nutch segment content data
      */
-    public NutchContentRDD(SparkContext context,
-                           List<String> parts,
-                           Function<String, Boolean> contentTypeFilter) {
+    public IndexedNutchContentRDD(SparkContext context,
+                                  String path,
+                                  Function<String, Boolean> contentTypeFilter) {
         super(context, new ArrayBuffer<>(), CONTENT_TAG);
-        this.partitions = new ContentPartition[parts.size()];
+        this.partitions = new ContentPartition[] {
+                new ContentPartition(0, path)};
         this.contentTypeFilter = contentTypeFilter;
-        for (int i = 0; i < parts.size(); i++) {
-            partitions[i] = new ContentPartition(i, parts.get(i));
-        }
-
     }
 
     @Override
-    public Iterator<Content> compute(Partition split, TaskContext context) {
+    public Iterator<IndexedContent> compute(Partition split, TaskContext context) {
         try {
             Path path = new Path(partitions[split.index()].getPath());
-            return new ContentIterator(path, NutchConfiguration.create(), contentTypeFilter);
+            java.util.Iterator<Content> iterator = new ContentIterator(path, NutchConfiguration.create(), contentTypeFilter);
+            return new IndexedContentIterator(iterator);
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             throw new RuntimeException(e);
@@ -63,7 +59,7 @@ public class NutchContentRDD extends RDD<Content> {
         return this.partitions;
     }
 
-    public JavaRDD<Content> toJavaRDD(){
+    public JavaRDD<IndexedContent> toJavaRDD(){
         return new JavaRDD<>(this, CONTENT_TAG);
     }
 }
