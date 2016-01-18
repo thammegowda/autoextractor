@@ -17,10 +17,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.11</scala.version>
         <spark.version>1.6.0</spark.version>
+        <nutch.version>1.11</nutch.version>
     </properties>
 
     <dependencies>
-
         <dependency>
             <groupId>${parent.groupId}</groupId>
             <artifactId>autoextractor-core</artifactId>
@@ -31,6 +31,17 @@
             <artifactId>spark-core_${scala.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_${scala.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.nutch</groupId>
+            <artifactId>nutch</artifactId>
+            <version>${nutch.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
