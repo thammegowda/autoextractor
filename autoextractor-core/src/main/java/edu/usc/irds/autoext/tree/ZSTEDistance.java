@@ -20,7 +20,7 @@ public class ZSTEDistance {
     private int[] iLs;
     private int[] jLs;
     private double[][] treeDist;
-    private final EditCost cost;
+    private final EditCost<TreeNode> cost;
 
     public ZSTEDistance(TreeNode iTree, TreeNode jTree){
         this(iTree, jTree, new DefaultEditCost());
@@ -32,7 +32,7 @@ public class ZSTEDistance {
      * @param jTree root node of second tree
      * @param cost costs for edit operations
      */
-    public ZSTEDistance(TreeNode iTree, TreeNode jTree, EditCost cost){
+    public ZSTEDistance(TreeNode iTree, TreeNode jTree, EditCost<TreeNode> cost){
         this.cost = cost;
         this.iNodes = iTree.postOrderTraverse();
         this.jNodes = jTree.postOrderTraverse();
