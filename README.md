@@ -1,3 +1,7 @@
+<span style="color:red;">NOTE : The project has been moved to https://github.com/uscdataScience/autoextractor </span>
+
+
+
 # Auto Extractor
 An intelligent extractor library which learns the structures of the input web pages and then figures out a strategy for scraping the structured content
 
