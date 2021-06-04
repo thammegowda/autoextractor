@@ -1,4 +1,4 @@
-<span style="color:red;">NOTE : The project has been moved to https://github.com/uscdataScience/autoextractor </span>
+# Moved to https://github.com/uscdataScience/autoextractor
 
 
 
