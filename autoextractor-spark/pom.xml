@@ -17,7 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>2.11</scala.version>
         <spark.version>1.6.0</spark.version>
-        <nutch.version>1.11</nutch.version>
+        <nutch.version>1.18</nutch.version>
     </properties>
 
     <dependencies>
